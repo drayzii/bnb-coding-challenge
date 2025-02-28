@@ -1,4 +1,6 @@
 import { useNavigate, useLocation, Routes, Route, Link } from 'react-router-dom'
+import { useFormContext } from 'react-hook-form'
+import type { FormData } from '../../context/formTypes'
 import PersonalInfo from '../../components/wizard/PersonalInfo'
 import ContactDetails from '../../components/wizard/ContactDetails'
 import LoanRequest from '../../components/wizard/LoanRequest'
@@ -17,11 +19,17 @@ export default function FormWizard() {
   const navigate = useNavigate()
   const location = useLocation()
   const currentPath = location.pathname.split('/').pop()
+  const { handleSubmit, trigger } = useFormContext<FormData>()
   
   const currentStepIndex = steps.findIndex(step => step.path === currentPath)
   
-  const goToNextStep = () => {
-    if (currentStepIndex < steps.length - 1) {
+  const goToNextStep = async () => {
+    const fieldsToValidate = currentPath === 'personal-info'
+      ? ['firstName'] as const
+      : []
+    
+    const isValid = await trigger(fieldsToValidate)
+    if (isValid && currentStepIndex < steps.length - 1) {
       navigate(`/wizard/${steps[currentStepIndex + 1].path}`)
     }
   }
@@ -30,6 +38,10 @@ export default function FormWizard() {
     if (currentStepIndex > 0) {
       navigate(`/wizard/${steps[currentStepIndex - 1].path}`)
     }
+  }
+
+  const onSubmit = (data: FormData) => {
+    console.log('Form submitted:', data)
   }
 
   return (
@@ -57,7 +69,7 @@ export default function FormWizard() {
         </ol>
       </nav>
 
-      <div className="mt-8 bg-white p-8 rounded-lg shadow">
+      <form onSubmit={handleSubmit(onSubmit)} className="mt-8 bg-white p-8 rounded-lg shadow">
         <Routes>
           <Route path="personal-info" element={<PersonalInfo />} />
           <Route path="contact-details" element={<ContactDetails />} />
@@ -81,8 +93,8 @@ export default function FormWizard() {
             Previous
           </button>
           <button
-            type="button"
-            onClick={goToNextStep}
+            type={currentStepIndex === steps.length - 1 ? 'submit' : 'button'}
+            onClick={currentStepIndex === steps.length - 1 ? undefined : goToNextStep}
             className={`
               px-4 py-2 rounded-md text-sm font-medium
               ${currentStepIndex === steps.length - 1
@@ -93,7 +105,7 @@ export default function FormWizard() {
             {currentStepIndex === steps.length - 1 ? 'Submit' : 'Next'}
           </button>
         </div>
-      </div>
+      </form>
     </div>
   )
 } 
