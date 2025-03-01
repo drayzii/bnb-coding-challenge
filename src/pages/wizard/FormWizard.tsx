@@ -19,18 +19,96 @@ export default function FormWizard() {
   const navigate = useNavigate()
   const location = useLocation()
   const currentPath = location.pathname.split('/').pop()
-  const { handleSubmit, trigger } = useFormContext<FormData>()
+  const { handleSubmit, trigger, getValues, setError, clearErrors, watch } = useFormContext<FormData>()
   
   const currentStepIndex = steps.findIndex(step => step.path === currentPath)
+  
+  const validateLoanRequest = async () => {
+    const values = getValues()
+    let isValid = true
+
+    if (values.upfrontPayment >= values.loanAmount) {
+      setError('upfrontPayment', {
+        type: 'custom',
+        message: 'Upfront payment must be less than loan amount'
+      })
+      isValid = false
+    } else {
+      clearErrors('upfrontPayment')
+    }
+
+    const dob = new Date(values.dateOfBirth)
+    const today = new Date()
+    const ageInMilliseconds = today.getTime() - dob.getTime()
+    const ageInYears = ageInMilliseconds / (1000 * 60 * 60 * 24 * 365.25)
+    const age = Math.floor(ageInYears)
+
+    console.log('Age calculation:', { age, terms: values.terms, totalAge: (values.terms / 12) + age })
+    
+    if ((values.terms / 12) + age >= 80) {
+      setError('terms', {
+        type: 'custom',
+        message: 'Loan term would exceed maximum age limit of 80 years'
+      })
+      isValid = false
+    } else {
+      clearErrors('terms')
+    }
+
+    return isValid
+  }
+
+  const validateFinancialInfo = async () => {
+    const values = getValues()
+    let isValid = true
+
+    const monthlyIncome = values.monthlySalary + (values.hasAdditionalIncome ? values.additionalIncome || 0 : 0)
+    const monthlyObligations = 
+      (values.hasMortgage ? values.mortgage || 0 : 0) + 
+      (values.hasOtherCredits ? values.otherCredits || 0 : 0)
+    
+    const disposableIncome = monthlyIncome - monthlyObligations
+    const totalLoanCapacity = disposableIncome * values.terms * 0.5
+
+    if (totalLoanCapacity <= values.loanAmount) {
+      const message = 'Your financial situation does not support this loan amount. Please either:'
+        + '\n- Reduce the loan amount (Step 3)'
+        + '\n- Increase your income'
+        + '\n- Reduce your financial obligations'
+
+      setError('monthlySalary', {
+        type: 'custom',
+        message
+      })
+      isValid = false
+    } else {
+      clearErrors('monthlySalary')
+    }
+
+    return isValid
+  }
   
   const goToNextStep = async () => {
     const fieldsToValidate = currentPath === 'personal-info'
       ? ['firstName', 'lastName', 'dateOfBirth'] as const
       : currentPath === 'contact-details'
       ? ['email', 'phone'] as const
+      : currentPath === 'loan-request'
+      ? ['loanAmount', 'upfrontPayment', 'terms'] as const
+      : currentPath === 'financial-info'
+      ? ['monthlySalary', 'hasAdditionalIncome', 'additionalIncome', 'hasMortgage', 'mortgage', 'hasOtherCredits', 'otherCredits'] as const
       : []
     
-    const isValid = await trigger(fieldsToValidate)
+    let isValid = await trigger(fieldsToValidate)
+    
+    if (isValid && currentPath === 'loan-request') {
+      isValid = await validateLoanRequest()
+    }
+
+    if (isValid && currentPath === 'financial-info') {
+      isValid = await validateFinancialInfo()
+    }
+
     if (isValid && currentStepIndex < steps.length - 1) {
       navigate(`/wizard/${steps[currentStepIndex + 1].path}`)
     }
@@ -44,6 +122,7 @@ export default function FormWizard() {
 
   const onSubmit = (data: FormData) => {
     console.log('Form submitted:', data)
+    alert('Application submitted successfully!')
   }
 
   return (
@@ -97,10 +176,11 @@ export default function FormWizard() {
           <button
             type={currentStepIndex === steps.length - 1 ? 'submit' : 'button'}
             onClick={currentStepIndex === steps.length - 1 ? undefined : goToNextStep}
+            disabled={currentStepIndex === steps.length - 1 && !watch('isConfirmed')}
             className={`
               px-4 py-2 rounded-md text-sm font-medium
               ${currentStepIndex === steps.length - 1
-                ? 'bg-green-600 text-white hover:bg-green-700'
+                ? 'bg-green-600 text-white hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed'
                 : 'bg-indigo-600 text-white hover:bg-indigo-700'}
             `}
           >

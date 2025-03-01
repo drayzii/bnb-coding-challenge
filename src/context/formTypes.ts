@@ -40,6 +40,48 @@ export const formSchema = z.object({
   phone: z.string()
     .min(1, 'Phone number is required')
     .regex(/^\+[1-9]\d{1,14}$/, 'Phone number must be in E.164 format (e.g., +1234567890)'),
-})
+
+  // Loan Request
+  loanAmount: z.number()
+    .min(10000, 'Loan amount must be at least €10,000')
+    .max(70000, 'Loan amount cannot exceed €70,000'),
+  
+  upfrontPayment: z.number()
+    .min(0, 'Upfront payment cannot be negative'),
+  
+  terms: z.number()
+    .min(10, 'Loan term must be at least 10 months')
+    .max(30, 'Loan term cannot exceed 30 months'),
+
+  // Financial Information
+  monthlySalary: z.number()
+    .min(1, 'Monthly salary is required'),
+
+  hasAdditionalIncome: z.boolean()
+    .default(false),
+  
+  additionalIncome: z.number()
+    .min(0, 'Additional income cannot be negative')
+    .optional(),
+
+  hasMortgage: z.boolean()
+    .default(false),
+  
+  mortgage: z.number()
+    .min(0, 'Mortgage payment cannot be negative')
+    .optional(),
+
+  hasOtherCredits: z.boolean()
+    .default(false),
+  
+  otherCredits: z.number()
+    .min(0, 'Other credits cannot be negative')
+    .optional(),
+
+  // Finalization
+  isConfirmed: z.boolean()
+    .default(false)
+    .refine((val) => val === true, 'You must confirm that the information is accurate'),
+}).strict()
 
 export type FormData = z.infer<typeof formSchema>
