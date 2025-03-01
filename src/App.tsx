@@ -1,7 +1,7 @@
 import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom'
 import FormProvider from './context/FormContext'
 import Home from './pages/Home'
-import FormWizard from './pages/wizard/FormWizard'
+import Application from './pages/Application'
 
 function App() {
   return (
@@ -23,7 +23,7 @@ function App() {
           <div className="max-w-6xl mx-auto px-4 py-8">
             <Routes>
               <Route path="/" element={<Home />} />
-              <Route path="/apply/*" element={<FormWizard />} />
+              <Route path="/apply/*" element={<Application />} />
             </Routes>
           </div>
         </div>

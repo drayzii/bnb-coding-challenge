@@ -1,13 +1,13 @@
 import { useNavigate, useLocation, Routes, Route, Link } from 'react-router-dom'
 import { useFormContext } from 'react-hook-form'
 import { useEffect } from 'react'
-import type { FormData } from '../../context/formTypes'
-import PersonalInfo from '../../components/wizard/PersonalInfo'
-import ContactDetails from '../../components/wizard/ContactDetails'
-import LoanRequest from '../../components/wizard/LoanRequest'
-import FinancialInfo from '../../components/wizard/FinancialInfo'
-import Finalization from '../../components/wizard/Finalization'
-import * as api from '../../services/api'
+import type { FormData } from '../context/formTypes'
+import PersonalInfo from '../components/wizard/PersonalInfo'
+import ContactDetails from '../components/wizard/ContactDetails'
+import LoanRequest from '../components/wizard/LoanRequest'
+import FinancialInfo from '../components/wizard/FinancialInfo'
+import Finalization from '../components/wizard/Finalization'
+import * as api from '../services/api'
 
 const STEP_STORAGE_KEY = 'loan_application_step'
 const UUID_STORAGE_KEY = 'loan_application_uuid'
@@ -41,6 +41,7 @@ export default function FormWizard() {
   useEffect(() => {
     if (currentPath) {
       localStorage.setItem(STEP_STORAGE_KEY, currentPath)
+      
     }
   }, [currentPath])
 
