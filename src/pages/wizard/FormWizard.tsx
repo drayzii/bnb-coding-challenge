@@ -25,7 +25,7 @@ export default function FormWizard() {
   
   const goToNextStep = async () => {
     const fieldsToValidate = currentPath === 'personal-info'
-      ? ['firstName'] as const
+      ? ['firstName', 'lastName', 'dateOfBirth'] as const
       : []
     
     const isValid = await trigger(fieldsToValidate)

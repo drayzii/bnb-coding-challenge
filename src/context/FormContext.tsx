@@ -8,6 +8,8 @@ export default function FormProvider({ children }: { children: ReactNode }) {
     resolver: zodResolver(formSchema),
     defaultValues: {
       firstName: '',
+      lastName: '',
+      dateOfBirth: '',
     },
     mode: 'onChange',
   })
