@@ -7,8 +7,10 @@ import ContactDetails from '../../components/wizard/ContactDetails'
 import LoanRequest from '../../components/wizard/LoanRequest'
 import FinancialInfo from '../../components/wizard/FinancialInfo'
 import Finalization from '../../components/wizard/Finalization'
+import * as api from '../../services/api'
 
 const STEP_STORAGE_KEY = 'loan_application_step'
+const UUID_STORAGE_KEY = 'loan_application_uuid'
 
 const steps = [
   { name: 'Personal Information', path: 'personal-info' },
@@ -142,11 +144,26 @@ export default function FormWizard() {
   }
 
   const onSubmit = async (data: FormData) => {
-    console.log('Form submitted:', data)
-    // Clear stored data after successful submission
-    localStorage.removeItem(STEP_STORAGE_KEY)
-    localStorage.removeItem('loan_application_form')
-    alert('Application submitted successfully!')
+    try {
+      const uuid = localStorage.getItem(UUID_STORAGE_KEY)
+      console.log('uuid', uuid);
+      let response
+
+      if (uuid) {
+        response = await api.updateEntity(uuid, data)
+        alert('Application updated successfully!')
+      } else {
+        response = await api.createEntity(data)
+        localStorage.setItem(UUID_STORAGE_KEY, response.entity.uuid)
+        alert('Application submitted successfully!')
+      }
+
+      localStorage.removeItem(STEP_STORAGE_KEY)
+      navigate('/')
+    } catch (error) {
+      console.error('Failed to submit application:', error)
+      alert('Failed to submit application. Please try again.')
+    }
   }
 
   return (
