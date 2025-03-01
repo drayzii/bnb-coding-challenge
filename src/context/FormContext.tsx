@@ -10,6 +10,8 @@ export default function FormProvider({ children }: { children: ReactNode }) {
       firstName: '',
       lastName: '',
       dateOfBirth: '',
+      email: '',
+      phone: '',
     },
     mode: 'onChange',
   })

@@ -31,6 +31,15 @@ export const formSchema = z.object({
       }
       return age <= 79
     }, 'Age must be 79 years or younger'),
+
+  // Contact Details
+  email: z.string()
+    .email('Please enter a valid email address')
+    .min(1, 'Email is required'),
+  
+  phone: z.string()
+    .min(1, 'Phone number is required')
+    .regex(/^\+[1-9]\d{1,14}$/, 'Phone number must be in E.164 format (e.g., +1234567890)'),
 })
 
 export type FormData = z.infer<typeof formSchema>
