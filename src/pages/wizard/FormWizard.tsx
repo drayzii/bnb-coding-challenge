@@ -1,11 +1,14 @@
 import { useNavigate, useLocation, Routes, Route, Link } from 'react-router-dom'
 import { useFormContext } from 'react-hook-form'
+import { useEffect } from 'react'
 import type { FormData } from '../../context/formTypes'
 import PersonalInfo from '../../components/wizard/PersonalInfo'
 import ContactDetails from '../../components/wizard/ContactDetails'
 import LoanRequest from '../../components/wizard/LoanRequest'
 import FinancialInfo from '../../components/wizard/FinancialInfo'
 import Finalization from '../../components/wizard/Finalization'
+
+const STEP_STORAGE_KEY = 'loan_application_step'
 
 const steps = [
   { name: 'Personal Information', path: 'personal-info' },
@@ -18,11 +21,27 @@ const steps = [
 export default function FormWizard() {
   const navigate = useNavigate()
   const location = useLocation()
-  const currentPath = location.pathname.split('/').pop()
+  const currentPath = location.pathname.split('/').pop() === 'apply' ? null : location.pathname.split('/').pop()
   const { handleSubmit, trigger, getValues, setError, clearErrors, watch } = useFormContext<FormData>()
   
-  const currentStepIndex = steps.findIndex(step => step.path === currentPath)
+  const currentStepIndex = steps.findIndex(step => step.path === (currentPath || 'personal-info'))
   
+  useEffect(() => {
+    console.log('currentPath', currentPath);
+    const savedStep = localStorage.getItem(STEP_STORAGE_KEY)
+    if (savedStep && !currentPath) {
+      navigate(`/apply/${savedStep}`)
+    } else if (!currentPath) {
+      navigate('/apply/personal-info')
+    }
+  }, [navigate, currentPath])
+
+  useEffect(() => {
+    if (currentPath) {
+      localStorage.setItem(STEP_STORAGE_KEY, currentPath)
+    }
+  }, [currentPath])
+
   const validateLoanRequest = async () => {
     const values = getValues()
     let isValid = true
@@ -109,19 +128,24 @@ export default function FormWizard() {
       isValid = await validateFinancialInfo()
     }
 
+    console.log('currentStepIndex', `/apply/${steps[currentStepIndex + 1].path}`);
+
     if (isValid && currentStepIndex < steps.length - 1) {
-      navigate(`/wizard/${steps[currentStepIndex + 1].path}`)
+      navigate(`/apply/${steps[currentStepIndex + 1].path}`)
     }
   }
   
   const goToPreviousStep = () => {
     if (currentStepIndex > 0) {
-      navigate(`/wizard/${steps[currentStepIndex - 1].path}`)
+      navigate(`/apply/${steps[currentStepIndex - 1].path}`)
     }
   }
 
-  const onSubmit = (data: FormData) => {
+  const onSubmit = async (data: FormData) => {
     console.log('Form submitted:', data)
+    // Clear stored data after successful submission
+    localStorage.removeItem(STEP_STORAGE_KEY)
+    localStorage.removeItem('loan_application_form')
     alert('Application submitted successfully!')
   }
 
@@ -132,7 +156,7 @@ export default function FormWizard() {
           {steps.map((step, index) => (
             <li key={step.name} className="relative">
               <Link
-                to={`/wizard/${step.path}`}
+                to={`/apply/${step.path}`}
                 className={`
                   flex h-9 w-9 items-center justify-center rounded-full
                   ${index <= currentStepIndex

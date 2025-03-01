@@ -17,7 +17,7 @@ function App() {
                   </div>
                   <div className="flex items-center space-x-4">
                     <Link to="/" className="py-4 px-2 text-gray-500 hover:text-gray-900">Home</Link>
-                    <Link to="/wizard/personal-info" className="py-4 px-2 text-gray-500 hover:text-gray-900">Apply Now</Link>
+                    <Link to="/apply/personal-info" className="py-4 px-2 text-gray-500 hover:text-gray-900">Apply Now</Link>
                   </div>
                 </div>
               </div>
@@ -27,7 +27,7 @@ function App() {
           <div className="max-w-6xl mx-auto px-4 py-8">
             <Routes>
               <Route path="/" element={<Home />} />
-              <Route path="/wizard/*" element={<FormWizard />} />
+              <Route path="/apply/*" element={<FormWizard />} />
             </Routes>
           </div>
         </div>
