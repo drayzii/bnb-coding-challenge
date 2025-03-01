@@ -11,6 +11,7 @@ import * as api from '../services/api'
 
 const STEP_STORAGE_KEY = 'loan_application_step'
 const UUID_STORAGE_KEY = 'loan_application_uuid'
+const FORM_DATA_STORAGE_KEY = 'loan_application_data'
 
 const steps = [
   { name: 'Personal Information', path: 'personal-info' },
@@ -41,9 +42,12 @@ export default function FormWizard() {
   useEffect(() => {
     if (currentPath) {
       localStorage.setItem(STEP_STORAGE_KEY, currentPath)
-      
+      if (!localStorage.getItem(FORM_DATA_STORAGE_KEY)) {
+        const data = watch()
+        localStorage.setItem(FORM_DATA_STORAGE_KEY, JSON.stringify(data))
+      }
     }
-  }, [currentPath])
+  }, [currentPath, watch])
 
   const validateLoanRequest = async () => {
     const values = getValues()
@@ -152,10 +156,12 @@ export default function FormWizard() {
 
       if (uuid) {
         response = await api.updateEntity(uuid, data)
+        localStorage.removeItem(FORM_DATA_STORAGE_KEY)
         alert('Application updated successfully!')
       } else {
         response = await api.createEntity(data)
         localStorage.setItem(UUID_STORAGE_KEY, response.entity.uuid)
+        localStorage.removeItem(FORM_DATA_STORAGE_KEY)
         alert('Application submitted successfully!')
       }
 

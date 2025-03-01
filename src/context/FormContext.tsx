@@ -5,6 +5,7 @@ import { formSchema, type FormData } from './formTypes'
 import * as api from '../services/api'
 
 const UUID_STORAGE_KEY = 'loan_application_uuid'
+const FORM_DATA_STORAGE_KEY = 'loan_application_data'
 
 const defaultValues: FormData = {
   firstName: '',
@@ -29,16 +30,19 @@ export default function FormProvider({ children }: { children: ReactNode }) {
   const [uuid, setUuid] = useState<string | null>(localStorage.getItem(UUID_STORAGE_KEY))
   const [isLoading, setIsLoading] = useState(true)
 
+  const savedData = localStorage.getItem(FORM_DATA_STORAGE_KEY)
+  const initialValues = savedData ? { ...defaultValues, ...JSON.parse(savedData) } : defaultValues
+
   const methods = useForm<FormData>({
     resolver: zodResolver(formSchema),
-    defaultValues,
+    defaultValues: initialValues,
     mode: 'onChange',
   })
 
   useEffect(() => {
     async function loadSavedApplication() {
       try {
-        if (uuid) {
+        if (uuid && !localStorage.getItem(FORM_DATA_STORAGE_KEY)) {
           const response = await api.getEntity(uuid)
           // eslint-disable-next-line @typescript-eslint/no-unused-vars
           const { uuid: _, ...rest } = response
@@ -55,6 +59,14 @@ export default function FormProvider({ children }: { children: ReactNode }) {
 
     loadSavedApplication()
   }, [uuid, methods])
+
+  useEffect(() => {
+    const subscription = methods.watch((data) => {
+      localStorage.setItem(FORM_DATA_STORAGE_KEY, JSON.stringify(data))
+    })
+
+    return () => subscription.unsubscribe()
+  }, [methods, uuid])
 
   if (isLoading) {
     return <div>Loading...</div>
